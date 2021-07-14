@@ -1,0 +1,18 @@
+Follow-up Questions
+
+How long did you spend on the test?
+About 15 hours.
+
+What would you add if you had more time?
+I would put a lot of thoughts into the web design. Make it nice looking and functional.
+
+How would you improve the product APIs that you had to consume?
+They responded with poor (or faulty) JSON mapping. I had to explicitly rectify the JSON received in order to correctly extract its data.
+The promotions were also hard to calculate because of the way they were responded by the API. 
+
+What did you find most difficult?
+I had a really hard time trying to make the front-end work. The back-end was really easy to make, but the logic I used in this project gave a lot of work on the
+Javascript side. I ended up using JavaScript for all the calculations and message formatting, leaving the backend only for communicating with the Wiremock APIs.
+
+How did you find the overall experience, any feedback for us?
+I liked the experience. I know that, given the right amount of time, I could make this project look a lot better. 
