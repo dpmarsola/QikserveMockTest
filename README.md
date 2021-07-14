@@ -6,7 +6,7 @@ The original source code is stored inside the /src folder.
 
 The following instructions should be executed in a Linux machine.
 
-In order to make it run, you have to:
+In order to make the application run, you have to:
 
 1. Download the "AmazingStore.tar" file and copy it to the desired folder.
 2. Unzip the file with "tar -xvf AmazingStore.tar" 
