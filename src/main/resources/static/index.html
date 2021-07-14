@@ -1,0 +1,75 @@
+<html>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 15px;
+}
+</style>
+<body>
+<h2>Amazing Store is Now Open!</h2>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+function listProducts()
+{
+	document.getElementById("divBtnListProds").style.display = "none";
+	document.getElementById("divListProds").style.display = "block";
+	
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            return listProductsJsonArray(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", "http://localhost:8080/listProducts", true); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+function listProductsJsonArray(jsonArray){
+	
+	var html = 	"";
+	const jsonObj = JSON.parse(jsonArray);
+	
+	html += "<table>";
+	html += "<tr>";
+	html += "<th>Sel</th>";
+	html += "<th>Item</th>";
+	html += "<th>Price</th>";
+	html += "<th>Quantity</th>";
+	html += "</tr>";
+
+	for (let i in jsonObj.menu) {
+		html += "<tr>";
+		html += "<td>" + "<input type=\"checkbox\" id=\"ProdID" + i + "\" name=\"ProdID\" value=\"" + jsonObj.menu[i].id + "\">" + "</td>";
+		html += "<td>" + jsonObj.menu[i].name + "</td>";
+		html += "<td> $" + (jsonObj.menu[i].price / 100) + " </td>";
+		html += "<td> <div class=\"qty\"><input type=\"text\" id=\"qtyItem\" name=\"qtyItem\"></div></td>";
+		html += "</tr>";
+		
+	}
+	
+	html += "</table>";
+	
+	document.getElementById("menulist").innerHTML = html;
+	
+}
+</script>
+
+<div id="divBtnListProds" style="display: block;">
+	<button id="btnListProds" onclick="listProducts()">Click Here and choose our Amazingly Delicious food</button>
+</div>
+
+<p>
+
+<div id="divListProds" style="display: none;">
+	<form action="/shoppingcart.html" method="get" id="form1">
+		<div id="menulist"></div><p>
+		<button type="submit" form="form1" value="Submit">Proceed to Your Basket</button>
+	</form>
+	<a href="http://localhost:8080/">Start Over</a>	
+</div>
+
+</body>
+</html>

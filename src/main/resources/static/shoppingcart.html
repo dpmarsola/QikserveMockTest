@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+var jsonStringAux = "";
+var jsonStringAux2 = "";
+var htmlLine = []; 
+var jsonObj = "";
+var jsonQty = "";
+
+function init(){
+	
+	var query = window.location.search.substring(1);
+	var qs = parse_query_string(query);
+	var pid = "";
+	var qitem = "";
+	
+	for ( let i in qs){
+		
+		if (qs[i]["ProdID"] > ""){
+			listProductsByID(qs[i]["ProdID"]);
+			pid = qs[i]["ProdID"];
+		}
+		
+		if (qs[i]["qtyItem"] > ""){
+			qitem = qs[i]["qtyItem"];
+		}
+		
+		if (pid != "" && qitem != ""){
+			jsonStringAux2 = "{ \"" + pid + "\" : \"" + qitem + "\" }"
+			if ( jsonQty == ""){
+				jsonQty = jsonStringAux2;
+			}else{
+				jsonQty = jsonQty + "," + jsonStringAux2;
+			}
+			pid = "";
+			qitem = "";
+		}
+		
+	}
+	
+	jsonQty = "{ \"menu\" : \[ " + jsonQty + "]}";
+
+	jsonStringAux = "{ \"menu\" : \[ " + jsonStringAux + "]}";
+	
+	jsonObj = JSON.parse(jsonStringAux);
+
+	consolidateBasket(jsonObj, jsonQty);
+
+}
+
+function parse_query_string(query) {
+	var vars = query.split("&");
+	var query_string = "";
+	var jsonArray = [];
+	for (var i = 0; i < vars.length; i++) {
+	  var pair = vars[i].split("=")
+	  if (pair[1] != ""){
+		  string1 = "\"" + pair[0] + "\"";
+		  string2 = "\"" + pair[1] + "\"";
+		  query_string = "{" + string1 + ":" + string2 + "}";
+		  jsonArray[i] = JSON.parse(query_string);  
+	  }
+	  
+	}
+	
+	return jsonArray;
+}
+	
+function listProductsByID(id) {
+	var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            return listProductsJsonArray(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", "http://localhost:8080/listProducts/" + id, false); // true for asynchronous 
+    xmlHttp.send(null);
+}
+
+function listProductsJsonArray(jsonArray){
+	
+	if ( jsonStringAux == ""){
+		jsonStringAux = jsonArray;
+	}else{
+		jsonStringAux = jsonStringAux + "," + jsonArray;
+	}
+	
+}
+
+function maskValue(value, debug){
+
+	value = parseFloat(value.toString().replace(/(.*){1}/, '0$1').replace(/[^\d]/g, '').replace(/(\d\d?)$/, '.$1')).toFixed(2);
+
+	return value;
+	
+}
+function consolidateBasket(jsonObj, jsonQty){
+	
+	var rawTotal = 0;         //total amount of all itens in the basket (without discounts)
+	var totalDiscount = 0;    //total amoount of the promos of all itens in the basket
+	var totalPayable = 0;     //the value of "rawTotal" minus the value of "totalDiscount"
+	const htmlDiscountLine = [];
+
+	var count = 0;
+	var qtyItem = JSON.parse(jsonQty);
+	var qty = 0;
+	
+	var formatter = new Intl.NumberFormat('en-GB', { minimumIntegerDigits: 1, maximumFractionDigits: 2 })
+	
+	for (let i in jsonObj.menu){
+		
+		itemPrice = maskValue(jsonObj.menu[i].price, "p1");
+	
+		//if quantity is more than 1
+		if (qtyItem.menu[i].hasOwnProperty(jsonObj.menu[i].id)){
+			qty = qtyItem.menu[i][jsonObj.menu[i].id];
+			itemsTotal = (itemPrice * qty);
+		}
+		
+		rawTotal += itemsTotal;
+		
+
+		htmlLine[count] = "<td>" + jsonObj.menu[i].name + "</td><td align=\"center\">" + qty + "<td align=\"right\">" + itemPrice + "</td>";
+
+		if (jsonObj.menu[i].promotions[0] != null){
+			switch (jsonObj.menu[i].promotions[0].type){
+				case "QTY_BASED_PRICE_OVERRIDE":
+					if (qty >= jsonObj.menu[i].promotions[0].required_qty){
+						newPrice = maskValue(jsonObj.menu[i].promotions[0].price, "p3");
+						quotient = Math.floor(qty / jsonObj.menu[i].promotions[0].required_qty);
+						mod = (qty % jsonObj.menu[i].promotions[0].required_qty);
+						aux = newPrice * quotient;
+						if (mod > 0){
+							newTotal = aux + parseFloat(itemPrice);	
+						}else{
+							newTotal = aux;
+						}
+						discount = (itemsTotal * 100) - (newTotal * 100);
+						discount = (discount.toPrecision(3));
+						quotient = Math.floor(qty / jsonObj.menu[i].promotions[0].required_qty);
+						totalDiscount += discount;
+						totalDiscount = parseFloat(maskValue(totalDiscount, "p4"));
+						htmlDiscountLine[count] = "<td> Buy " + jsonObj.menu[i].promotions[0].required_qty + " " + jsonObj.menu[i].name + " and pay only $" + maskValue(newPrice, "p6") + "! </td><td></td><td align=\"right\"> -$"+ maskValue(discount, "p5") +"</td>"
+					}	
+					
+					break;
+				case "BUY_X_GET_Y_FREE":
+					if (qty >= jsonObj.menu[i].promotions[0].required_qty){
+						freeQty = jsonObj.menu[i].promotions[0].free_qty;
+						quotient = Math.floor(qty / jsonObj.menu[i].promotions[0].required_qty);
+						freeItems = (freeQty * quotient);
+						discount = (itemPrice * freeItems);
+						totalDiscount += parseFloat(discount);
+						htmlDiscountLine[count] = "<td> Buy " + jsonObj.menu[i].promotions[0].required_qty + " get " + freeQty + " FREE!</td><td></td><td align=\"right\"> -$"+ maskValue(discount, "p7") +"</td>"
+					}	
+					
+					break;
+				case "FLAT_PERCENT":
+					percentage = maskValue(jsonObj.menu[i].promotions[0].amount, "p8");
+					discount = (itemsTotal * percentage);
+					htmlDiscountLine[count] = "<td> You've got " + jsonObj.menu[i].promotions[0].amount + "% discount on your " + jsonObj.menu[i].name + "!</td><td></td><td align=\"right\"> -$"+ formatter.format(discount) +"</td>"
+					totalDiscount += discount;
+					break;
+			}
+		}
+		
+		var html = "";
+		
+		html += "<table>";
+		html += "<tr>";
+		html += "<th>Basket</th>";
+		html += "<th>Quantity</th>";
+		html += "<th>Unit Price</th>";
+		html += "</tr>";		
+		
+		for (let i in htmlLine){
+			html += "<tr>";
+			html += htmlLine[i];
+			html += "</tr>";
+		}
+
+		html += "<tr>";
+		html += "<td> -----------------------------------------------------------------<td>----------------</td><td>----------------</td>";
+		html += "</tr>";
+		html += "<tr>";
+
+		
+		html += "<tr style=\"font-weight:bold\">";
+		html += "<td> Subtotal <td></td><td align=\"right\"> $" + formatter.format(rawTotal) + "</td>";
+		html += "</tr>";
+
+		for (let i in htmlDiscountLine){
+			html += "<tr style=\"font-size:11px\">";
+			html += htmlDiscountLine[i];
+			html += "</tr>";
+		}
+		
+		html += "<tr style=\"font-weight:bold\">";
+		html += "<td> Discounts <td></td><td align=\"right\"> -$" + formatter.format(totalDiscount) + "</td>";
+		html += "</tr>";
+
+		html += "<tr>";
+		html += "<td> -----------------------------------------------------------------<td>----------------</td><td>----------------</td>";
+		html += "</tr>";
+		html += "<tr>";
+
+		totalPayable = (rawTotal - totalDiscount);
+
+		html += "<tr style=\"font-weight:bold\">";
+		html += "<td> Total <td></td><td align=\"right\"> $" + formatter.format(totalPayable) + "</td>";
+		html += "</tr>";
+		
+		html += "</table>";
+				
+		document.getElementById("basket").innerHTML = html;
+		totalPayable = rawTotal - totalDiscount;
+		count++;				
+		
+	}
+
+}
+
+</script>
+<body onload="init()">
+
+<div id="divListProds" style="display: block;">
+	<form action="hello.html" method="get" id="form1">
+		<div id="basket"></div><p>
+	</form>
+	<a href="http://localhost:8080/">Start Over</a>
+</div>
+</body>
+</html>
