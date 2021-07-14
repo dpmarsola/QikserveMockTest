@@ -4,7 +4,7 @@ This is the development of the QikServe Engineer Technical Test.
 
 The original source code is stored inside the /src folder.
 
-The following instructions should be followed in a Linux machine.
+The following instructions should be executed in a Linux machine.
 
 In order to make it run, you have to:
 
