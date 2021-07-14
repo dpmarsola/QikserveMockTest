@@ -2,7 +2,7 @@
 
 This is the development of the QikServe Engineer Technical Test.
 
-The executable file, can run in any Linux machine.
+The following instructions should be followed in a Linux machine.
 
 In order to make it run, you have to:
 
