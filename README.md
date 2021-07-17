@@ -21,5 +21,15 @@ The first page should load and you can click on the buttons to put the items in 
 
 The mock test stops at the second page, where you can review how much you will pay and how much you eventually saved with the promos.
 
+WANT TO SEE THIS PROJECT RUNNING ON AWS? IN THE CLOUD?
+
+I uploaded the same code to my AWS account. 
+You can reach the website at http://ec2-54-157-182-136.compute-1.amazonaws.com:8080/
+It's the same code you ran on your local machine, but now it's running on AWS!
+Hope you enjoyed.
+
+Best Regards.
+Daniel
+
 
 
